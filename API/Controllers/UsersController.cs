@@ -26,7 +26,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
     {
 

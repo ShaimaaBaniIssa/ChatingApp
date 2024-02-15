@@ -20,7 +20,7 @@ export class RegisterComponent {
         next: () => {
           this.cancel();
         },
-        error: (error) => this.toastr.error(),
+        error: (error) => this.toastr.error(error),
       }
     );
   }
