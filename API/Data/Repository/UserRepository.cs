@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using API.Data;
 using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Repository.IRepository;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -31,11 +32,21 @@ namespace API.Repository
             .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MemberDto>> GetMembersAsync()
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
         {
-            return await _context.Users
-            .ProjectTo<MemberDto>(_mapper.ConfigurationProvider) // doesnt return uneccessary value
-            .ToListAsync();
+            var query = _context.Users.AsQueryable(); // still in the database
+            query = query.Where(u => u.UserName != userParams.CurrentUserName);
+            if (!String.IsNullOrEmpty(userParams.Gender))
+            {
+                query = query.Where(u => u.Gender == userParams.Gender);
+            }
+            query = userParams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(u => u.Created),
+                _ => query.OrderByDescending(u => u.LastActive) //default
+            };
+            return await PagedList<MemberDto>.CreateAsync(query.AsNoTracking().ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+            , userParams.PageNumber, userParams.PageSize);
         }
 
         public async Task<AppUser> GetUserByIdAsync(int id)

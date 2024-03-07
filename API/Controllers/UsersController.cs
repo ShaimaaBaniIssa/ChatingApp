@@ -3,6 +3,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Repository.IRepository;
 using API.Services.Interfaces;
 using AutoMapper;
@@ -15,6 +16,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[ServiceFilter(typeof(LogUserActivity))]
 
 public class UsersController : ControllerBase
 {
@@ -32,10 +34,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
+    public async Task<ActionResult<PagedList<MemberDto>>> GetUsers([FromQuery] UserParams userParams)
     {
+        var user = await _userRepository.GetUserByUserNameAsync(User.GetUserName());
+        userParams.CurrentUserName = user.UserName;
+        // userParams contains the pageSize and pageNumber from the client
 
-        var users = await _userRepository.GetMembersAsync();
+        var users = await _userRepository.GetMembersAsync(userParams); // return the list
+        Response.AddPaginationHeader(new PaginationHeader(users.CurrentPage,
+        users.PageSize, users.TotalCount, users.TotalPages));
         return Ok(users);
     }
 

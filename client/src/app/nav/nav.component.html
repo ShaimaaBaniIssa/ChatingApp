@@ -5,7 +5,7 @@
     <ul class="navbar-nav me-auto mb-2 mb-md-0">
       <ng-container *ngIf="accountService.currentUser$| async">
         <li class="nav-item">
-          <a class="nav-link active" routerLink="/members" routerLinkActive="active">Matches</a>
+          <a class="nav-link active" routerLink="/members" routerLinkActive="active">Members</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/lists" routerLinkActive="active">Lists</a>
@@ -21,8 +21,8 @@
     </ul>
 
     <div class="dropdown" *ngIf="(accountService.currentUser$| async) as user" dropdown>
-      <img src="{{user.photoUrl}}" alt="user photo">
-      <a class="dropdown-toggle text-light text-decoration-none ms-2" dropdownToggle>Welcome {{user.userName |
+      <img src="{{user.photoUrl|| './assets/user.png'}}" alt="user photo">
+      <a class="dropdown-toggle text-light text-decoration-none ms-2" dropdownToggle>Welcome {{user.knownAs |
         titlecase}}</a>
       <div class="dropdown-menu" *dropdownMenu>
         <a class="dropdown-item" routerLink="/member/edit">Edit Profile</a>
