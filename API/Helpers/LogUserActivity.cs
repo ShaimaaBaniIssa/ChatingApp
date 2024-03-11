@@ -15,7 +15,7 @@ namespace API.Helpers
             if (!resultContext.HttpContext.User.Identity.IsAuthenticated) return;
             var userId = resultContext.HttpContext.User.GetUserId();
             var repository = resultContext.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
-            var user = await repository.GetUserByIdAsync(int.Parse(userId));
+            var user = await repository.GetUserByIdAsync(userId);
 
             // to update user last active
             user.LastActive = DateTime.UtcNow;
