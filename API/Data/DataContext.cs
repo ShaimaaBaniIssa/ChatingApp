@@ -24,10 +24,24 @@ public class DataContext : DbContext
         .WithMany(t => t.LikedByUsers)
         .HasForeignKey(s => s.TargetUserId)
         .OnDelete(DeleteBehavior.NoAction);
+        ////////////////////////////////////////////////////////////////////////////
+
+
+        modelBuilder.Entity<Message>()
+        .HasOne(s => s.Sender)
+        .WithMany(m => m.MessagesSent)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Message>()
+        .HasOne(r => r.Recipient)
+        .WithMany(m => m.MessagesReceived)
+        .OnDelete(DeleteBehavior.NoAction);
     }
 
     public DbSet<AppUser> Users { get; set; }
     public DbSet<UserLike> Likes { get; set; }
+    public DbSet<Message> Messages { get; set; }
+
 
 
 

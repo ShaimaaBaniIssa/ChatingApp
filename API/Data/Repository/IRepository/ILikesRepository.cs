@@ -6,7 +6,7 @@ using API.DTOs;
 using API.Entities;
 using API.Helpers;
 
-namespace API.Services.Interfaces
+namespace API.Repository.IRepository
 {
     public interface ILikesRepository
     {

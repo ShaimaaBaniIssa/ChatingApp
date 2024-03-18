@@ -1,37 +1,73 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { GalleryItem, GalleryModule, ImageItem } from 'ng-gallery';
-import { TabsModule } from 'ngx-bootstrap/tabs';
+import { TabDirective, TabsModule, TabsetComponent } from 'ngx-bootstrap/tabs';
 import { Member } from 'src/app/_models/member';
 import { MembersService } from 'src/app/_services/members.service';
 import { TimeagoModule } from "ngx-timeago";
+import { MemberMessagesComponent } from '../member-messages/member-messages.component';
+import { MessageService } from 'src/app/_services/message.service';
+import { Message } from 'src/app/_models/message';
 
 @Component({
   selector: 'app-member-detail',
   standalone: true, // no longer part of ng module
   templateUrl: './member-detail.component.html',
   styleUrls: ['./member-detail.component.css'],
-  imports: [CommonModule, TabsModule, GalleryModule, TimeagoModule]
+  imports: [CommonModule, TabsModule, GalleryModule, TimeagoModule, MemberMessagesComponent]
 })
 export class MemberDetailComponent implements OnInit {
-  member: Member | undefined;
+  @ViewChild('memberTabs', { static: true }) memberTabs?: TabsetComponent;
+  activeTab?: TabDirective;
+  member: Member = {} as Member;
   images: GalleryItem[] = [];
-  constructor(private memberService: MembersService, private route: ActivatedRoute) { }
+  messages: Message[] = [];
+
+  constructor(private memberService: MembersService,
+    private route: ActivatedRoute,
+    private messageService: MessageService) { }
   ngOnInit(): void {
-    this.loadMember();
+
+    //route resolver get the data before a component is constructed
+    // The router waits for the data to be resolved before the route is finally activated
+    this.route.data.subscribe({
+      next: data => {
+        this.member = data['member'] // same property name in route resolver
+      }
+    })
+    // happened before View initalization
+    this.route.queryParams.subscribe({
+      next: params => {
+        params['tab'] && this.selectTab(params['tab'])
+
+      }
+    })
+    this.getImages();
+
 
   }
-  loadMember() {
-    const userName = this.route.snapshot.paramMap.get('userName');
-    if (!userName) return;
-    this.memberService.getMember(userName).subscribe({
-      next: (member) => {
-        this.member = member
-        this.getImages();
-      }
-    });
+  onTabActivatd(data: TabDirective) {
+    this.activeTab = data;
+    if (this.activeTab?.heading === 'Messages') {
+      this.getMessages()
+    }
   }
+  selectTab(heading: string) {
+    if (this.memberTabs) {
+      this.memberTabs.tabs.find(u => u.heading === heading)!.active = true;
+    }
+  }
+  getMessages() {
+    if (this.member?.userName) {
+      this.messageService.getMessageThread(this.member?.userName).subscribe({
+        next: (response) => {
+          this.messages = response;
+        }
+      })
+    }
+  }
+
   getImages() {
     if (!this.member) return;
     for (const photo of this.member?.photos) {

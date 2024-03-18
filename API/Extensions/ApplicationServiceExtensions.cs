@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Data;
+using API.Data.Repository;
+using API.Data.Repository.IRepository;
 using API.Helpers;
 using API.Repository;
 using API.Repository.IRepository;
@@ -26,11 +28,15 @@ namespace API.Extensions
 
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ILikesRepository, LikesRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+
+
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.Configure<ColudinarySettings>(config.GetSection("CloudinarySettings"));
             services.AddScoped<IPhotoService, PhotoService>();
             services.AddScoped<LogUserActivity>();
-            services.AddScoped<ILikesRepository, LikesRepository>();
+
 
             return services;
         }
