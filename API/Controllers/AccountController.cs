@@ -37,8 +37,6 @@ namespace API.Controllers
             using var hmac = new HMACSHA512(); // implement IDisposable Interface ,when we finish with this class then the dispose methhod will be called 
 
             user.UserName = registerDto.UserName.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-            user.PasswordSalt = hmac.Key;
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -59,12 +57,7 @@ namespace API.Controllers
             {
                 return Unauthorized("Invalid Username");
             }
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-            var hashedPassword = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
-            for (int i = 0; i < hashedPassword.Length; i++)
-            {
-                if (hashedPassword[i] != user.PasswordHash[i]) return Unauthorized("Invalid Password");
-            }
+
             return new UserDto
             {
                 UserName = user.UserName,
