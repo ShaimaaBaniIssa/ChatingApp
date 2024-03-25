@@ -1,0 +1,66 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using API.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AdminController : ControllerBase
+    {
+        private readonly UserManager<AppUser> _userManager;
+
+        public AdminController(UserManager<AppUser> userManager)
+        {
+            _userManager = userManager;
+        }
+        [HttpGet("users-with-roles")]
+        [Authorize(Policy = "RequireAdminRole")]
+        public async Task<ActionResult> GetUsersWithRoles()
+        {
+            var users = await _userManager.Users
+            .Select(u => new
+            {
+                u.Id,
+                UserName = u.UserName,
+                Roles = u.UserRoles.Select(r => r.Role.Name).ToList()
+            })
+            .ToListAsync();
+            return Ok(users);
+        }
+
+        [Authorize(Policy = "RequireAdminRole")]
+        [HttpPost("edit-roles/{userName}")]
+        // userName --> route Parameter
+        // roles from query string
+        public async Task<ActionResult> EditRoles(string userName, [FromQuery] string roles)
+        {
+            if (String.IsNullOrEmpty(roles)) return BadRequest("You must select at least one role");
+            var selectedRoles = roles.Split(',').ToArray();
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null) return NotFound();
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var result = await _userManager.AddToRolesAsync(user, selectedRoles.Except(userRoles));
+            if (!result.Succeeded) return BadRequest("Failed");
+
+            result = await _userManager.RemoveFromRolesAsync(user, userRoles.Except(selectedRoles));
+            if (!result.Succeeded) return BadRequest("Failed");
+
+            return Ok(await _userManager.GetRolesAsync(user));
+        }
+
+        [HttpGet("photos-to-moderate")]
+        [Authorize(Policy = "ModeratePhotoRole")]
+        public async Task<ActionResult> GetPhotosForModeration()
+        {
+            return Ok();
+        }
+    }
+}
